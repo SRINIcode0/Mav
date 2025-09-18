@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Team Reveal</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: #00ff00;
+      font-family: "Courier New", monospace;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 10;
+    }
+    #overlay button {
+      padding: 15px 30px;
+      font-size: 20px;
+      background: #111;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      cursor: pointer;
+    }
+    #logo {
+      position: relative;
+      max-width: 400px;
+      opacity: 0;
+      transform: scale(0.2);
+      transition: transform 1s ease-out, opacity 1s ease-out;
+      z-index: 5;
+    }
+    #logo.show {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    .terminal {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 280px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #00ff00;
+      font-size: 14px;
+      padding: 10px;
+      overflow-x: auto;   /* horizontal scroll if name too long */
+      overflow-y: auto;   /* auto-scroll vertically */
+      white-space: pre;   /* keep each line intact */
+      line-height: 1.4em;
+      z-index: 2;
+    }
+    #leftTerm { left: 0; }
+    #rightTerm { right: 0; }
+    #centerTerm {
+      position: absolute;
+      top: 10%;
+      color: #00ff00;
+      font-size: 18px;
+      white-space: pre;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Overlay with button -->
+  <div id="overlay">
+    <button id="startBtn">CLICK TO UNLOCK</button>
+  </div>
+
+  <!-- Hidden logo -->
+  <img id="logo" src="logo.png" alt="Team Logo">
+
+  <!-- Side terminals -->
+  <div class="terminal" id="leftTerm"></div>
+  <div class="terminal" id="rightTerm"></div>
+  <div id="centerTerm"></div>
+
+  <!-- Audio -->
+  <audio id="bgMusic" src="bg.mp3"></audio>
+
+  <script>
+    const btn = document.getElementById("startBtn");
+    const overlay = document.getElementById("overlay");
+    const logo = document.getElementById("logo");
+    const bgMusic = document.getElementById("bgMusic");
+    const leftTerm = document.getElementById("leftTerm");
+    const rightTerm = document.getElementById("rightTerm");
+    const centerTerm = document.getElementById("centerTerm");
+
+    const names = [
+      "Aarthi Selvakumari", "Balakrishnan Sundararaj",
+      "Dhanasekaran Kuppusamy", "Giri", "Gobinath Shanmugam",
+      "Ilamathi Natrajan", "Karthickkumar Selvam", "Karthik Pandian",
+      "Kavearhasi Viswanathan", "NikilPrasath Satheeskumar",
+      "Ponmani Sasikumar", "Ragul Elaveni", "Ranjith Moorthi",
+      "Sanjeev Vishwanathan", "SaravanaKumar Palanisamy",
+      "SriNikethan", "Suresh Pandian", "Vijay Manickam",
+      "VinodhKanna Pari", "Vivek Raja"
+    ];
+
+    const loadingLines = [
+      "INITIALIZING SYSTEM...",
+      "LOADING MODULES...",
+      "ACCESSING DATABASE...",
+      "BYPASSING FIREWALL...",
+      "ACCESS GRANTED ✔",
+      "REVEALING IDENTITY..."
+    ];
+
+    function typeWriter(el, text, delay, callback) {
+      let i = 0;
+      function type() {
+        if (i < text.length) {
+          el.innerText += text.charAt(i);
+          el.scrollTop = el.scrollHeight; // auto-scroll as text grows
+          i++;
+          setTimeout(type, delay);
+        } else {
+          if (callback) callback();
+        }
+      }
+      type();
+    }
+
+    btn.addEventListener("click", async () => {
+      overlay.style.display = "none";
+
+      try {
+        await bgMusic.play();
+      } catch (e) {
+        console.log("Audio play blocked:", e);
+      }
+
+      // Step 1: Fake hacking loading
+      let delay = 0;
+      loadingLines.forEach((line, idx) => {
+        setTimeout(() => {
+          typeWriter(centerTerm, line + "\n", 50, () => {
+            if (idx === loadingLines.length - 1) {
+              // Step 2: Show logo after last line
+              setTimeout(() => logo.classList.add("show"), 500);
+
+              // Step 3: Start typing names after logo
+              names.forEach((name, idx) => {
+                setTimeout(() => {
+                  if (idx % 2 === 0) {
+                    typeWriter(leftTerm, "\n> " + name, 30);
+                  } else {
+                    typeWriter(rightTerm, "\n> " + name, 30);
+                  }
+                }, idx * 500);
+              });
+            }
+          });
+        }, delay);
+        delay += 1500;
+      });
+    });
+  </script>
+</body>
+</html>
