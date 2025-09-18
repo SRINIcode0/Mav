@@ -9,12 +9,13 @@
       background: black;
       color: #00ff00;
       font-family: "Courier New", monospace;
-      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      flex-direction: column;
     }
+
     #overlay {
       position: fixed;
       inset: 0;
@@ -25,68 +26,75 @@
       flex-direction: column;
       z-index: 10;
     }
+
     #overlay button {
-      padding: 15px 30px;
-      font-size: 20px;
+      padding: 12px 25px;
+      font-size: 16px;
       background: #111;
       color: #00ff00;
       border: 2px solid #00ff00;
       cursor: pointer;
     }
+
     #logo {
-      position: relative;
-      max-width: 400px;
+      max-width: 80%;
+      width: 300px;
       opacity: 0;
       transform: scale(0.2);
       transition: transform 1s ease-out, opacity 1s ease-out;
-      z-index: 5;
+      margin: 20px 0;
     }
+
     #logo.show {
       opacity: 1;
-      transform: scale(1.2);
+      transform: scale(1);
     }
+
     .terminal {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      width: 280px;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0,0,0,0.85);
       color: #00ff00;
       font-size: 14px;
       padding: 10px;
-      overflow-x: auto;   /* horizontal scroll if name too long */
-      overflow-y: auto;   /* auto-scroll vertically */
-      white-space: pre;   /* keep each line intact */
+      margin: 5px 0;
+      width: 90%;
+      max-width: 400px;
+      overflow-x: auto;
+      overflow-y: auto;
+      white-space: pre-wrap;
       line-height: 1.4em;
-      z-index: 2;
+      border: 1px solid #00ff00;
+      box-sizing: border-box;
     }
-    #leftTerm { left: 0; }
-    #rightTerm { right: 0; }
+
     #centerTerm {
-      position: absolute;
-      top: 10%;
       color: #00ff00;
       font-size: 18px;
-      white-space: pre;
       text-align: center;
+      white-space: pre-wrap;
+      margin: 10px 0;
+    }
+
+    @media (max-width: 600px) {
+      #overlay button {
+        font-size: 14px;
+        padding: 10px 20px;
+      }
+      #logo { width: 70%; }
+      .terminal { font-size: 12px; max-width: 95%; }
+      #centerTerm { font-size: 14px; }
     }
   </style>
 </head>
 <body>
-  <!-- Overlay with button -->
   <div id="overlay">
     <button id="startBtn">CLICK TO UNLOCK</button>
   </div>
 
-  <!-- Hidden logo -->
   <img id="logo" src="logo.png" alt="Team Logo">
 
-  <!-- Side terminals -->
-  <div class="terminal" id="leftTerm"></div>
-  <div class="terminal" id="rightTerm"></div>
+  <div class="terminal" id="terminal"></div>
   <div id="centerTerm"></div>
 
-  <!-- Audio -->
   <audio id="bgMusic" src="bg.mp3"></audio>
 
   <script>
@@ -94,8 +102,7 @@
     const overlay = document.getElementById("overlay");
     const logo = document.getElementById("logo");
     const bgMusic = document.getElementById("bgMusic");
-    const leftTerm = document.getElementById("leftTerm");
-    const rightTerm = document.getElementById("rightTerm");
+    const terminal = document.getElementById("terminal");
     const centerTerm = document.getElementById("centerTerm");
 
     const names = [
@@ -123,7 +130,7 @@
       function type() {
         if (i < text.length) {
           el.innerText += text.charAt(i);
-          el.scrollTop = el.scrollHeight; // auto-scroll as text grows
+          el.scrollTop = el.scrollHeight;
           i++;
           setTimeout(type, delay);
         } else {
@@ -136,29 +143,21 @@
     btn.addEventListener("click", async () => {
       overlay.style.display = "none";
 
-      try {
-        await bgMusic.play();
-      } catch (e) {
-        console.log("Audio play blocked:", e);
-      }
+      try { await bgMusic.play(); } catch(e) { console.log("Audio play blocked:", e); }
 
-      // Step 1: Fake hacking loading
+      // Typing loading lines
       let delay = 0;
       loadingLines.forEach((line, idx) => {
         setTimeout(() => {
           typeWriter(centerTerm, line + "\n", 50, () => {
             if (idx === loadingLines.length - 1) {
-              // Step 2: Show logo after last line
+              // Show logo after last line
               setTimeout(() => logo.classList.add("show"), 500);
 
-              // Step 3: Start typing names after logo
+              // Type names in terminal
               names.forEach((name, idx) => {
                 setTimeout(() => {
-                  if (idx % 2 === 0) {
-                    typeWriter(leftTerm, "\n> " + name, 30);
-                  } else {
-                    typeWriter(rightTerm, "\n> " + name, 30);
-                  }
+                  typeWriter(terminal, "\n> " + name, 30);
                 }, idx * 500);
               });
             }
