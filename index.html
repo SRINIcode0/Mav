@@ -15,7 +15,6 @@
       align-items: center;
       height: 100vh;
     }
-
     #overlay {
       position: fixed;
       inset: 0;
@@ -26,59 +25,50 @@
       flex-direction: column;
       z-index: 10;
     }
-
     #overlay button {
-      padding: 12px 25px;
-      font-size: 16px;
+      padding: 15px 30px;
+      font-size: 20px;
       background: #111;
       color: #00ff00;
       border: 2px solid #00ff00;
       cursor: pointer;
     }
-
     #logo {
       position: relative;
-      max-width: 80%;
-      width: 300px;
+      max-width: 400px;
       opacity: 0;
       transform: scale(0.2);
       transition: transform 1s ease-out, opacity 1s ease-out;
       z-index: 5;
     }
-
     #logo.show {
       opacity: 1;
-      transform: scale(1);
+      transform: scale(1.2);
     }
-
     .terminal {
-      position: relative;
-      width: 90%;
-      max-width: 350px;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 280px;
       background: rgba(0, 0, 0, 0.85);
       color: #00ff00;
-      font-size: 12px;
-      padding: 8px;
-      margin: 5px 0;
-      overflow-x: auto;
-      overflow-y: auto;
-      white-space: pre-wrap; /* wrap long names on mobile */
+      font-size: 14px;
+      padding: 10px;
+      overflow-x: auto;   /* horizontal scroll if name too long */
+      overflow-y: auto;   /* auto-scroll vertically */
+      white-space: pre;   /* keep each line intact */
       line-height: 1.4em;
       z-index: 2;
     }
-
+    #leftTerm { left: 0; }
+    #rightTerm { right: 0; }
     #centerTerm {
+      position: absolute;
+      top: 10%;
       color: #00ff00;
-      font-size: 16px;
+      font-size: 18px;
+      white-space: pre;
       text-align: center;
-      margin: 10px 0;
-    }
-
-    @media (max-width: 480px) {
-      #overlay button { font-size: 14px; padding: 10px 20px; }
-      #logo { width: 70%; }
-      .terminal { font-size: 11px; max-width: 95%; }
-      #centerTerm { font-size: 14px; }
     }
   </style>
 </head>
@@ -91,8 +81,9 @@
   <!-- Hidden logo -->
   <img id="logo" src="logo.png" alt="Team Logo">
 
-  <!-- Terminal -->
-  <div class="terminal" id="terminal"></div>
+  <!-- Side terminals -->
+  <div class="terminal" id="leftTerm"></div>
+  <div class="terminal" id="rightTerm"></div>
   <div id="centerTerm"></div>
 
   <!-- Audio -->
@@ -103,7 +94,8 @@
     const overlay = document.getElementById("overlay");
     const logo = document.getElementById("logo");
     const bgMusic = document.getElementById("bgMusic");
-    const terminal = document.getElementById("terminal");
+    const leftTerm = document.getElementById("leftTerm");
+    const rightTerm = document.getElementById("rightTerm");
     const centerTerm = document.getElementById("centerTerm");
 
     const names = [
@@ -131,7 +123,7 @@
       function type() {
         if (i < text.length) {
           el.innerText += text.charAt(i);
-          el.scrollTop = el.scrollHeight;
+          el.scrollTop = el.scrollHeight; // auto-scroll as text grows
           i++;
           setTimeout(type, delay);
         } else {
@@ -143,21 +135,30 @@
 
     btn.addEventListener("click", async () => {
       overlay.style.display = "none";
-      try { await bgMusic.play(); } catch (e) { console.log("Audio play blocked:", e); }
 
-      // Step 1: Loading lines
+      try {
+        await bgMusic.play();
+      } catch (e) {
+        console.log("Audio play blocked:", e);
+      }
+
+      // Step 1: Fake hacking loading
       let delay = 0;
       loadingLines.forEach((line, idx) => {
         setTimeout(() => {
           typeWriter(centerTerm, line + "\n", 50, () => {
             if (idx === loadingLines.length - 1) {
-              // Step 2: Show logo
+              // Step 2: Show logo after last line
               setTimeout(() => logo.classList.add("show"), 500);
 
-              // Step 3: Type names in terminal
+              // Step 3: Start typing names after logo
               names.forEach((name, idx) => {
                 setTimeout(() => {
-                  typeWriter(terminal, "\n> " + name, 30);
+                  if (idx % 2 === 0) {
+                    typeWriter(leftTerm, "\n> " + name, 30);
+                  } else {
+                    typeWriter(rightTerm, "\n> " + name, 30);
+                  }
                 }, idx * 500);
               });
             }
